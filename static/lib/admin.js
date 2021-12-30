@@ -1,59 +1,51 @@
 'use strict';
 
-define('admin/plugins/quickstart', ['settings', 'uploader'], function (settings, uploader) {
+define('admin/plugins/s3-uploads', ['bootbox'], function (bootbox) {
 	var ACP = {};
 
 	ACP.init = function () {
-		setupUploader();
-		settings.load('quickstart', $('.quickstart-settings'), function () {
-			setupColorInputs();
-		});
-		$('#save').on('click', saveSettings);
-	};
+		console.log('00000000000');
 
-	function saveSettings() {
-		settings.save('quickstart', $('.quickstart-settings'), function () {
-			app.alert({
-				type: 'success',
-				alert_id: 'quickstart-saved',
-				title: 'Settings Saved',
-				message: 'Please reload your NodeBB to apply these settings',
-				clickfn: function () {
-					socket.emit('admin.reload');
-				},
-			});
-		});
-	}
+        $('#aws-region option[value="{region}"]').prop('selected', true)
 
-	function setupColorInputs() {
-		var colorInputs = $('[data-settings="colorpicker"]');
-		colorInputs.on('change', updateColors);
-		updateColors();
-	}
+        $("#s3-upload-bucket").on("submit", (e) => {
+            e.preventDefault();
+			debugger;
+            save("s3settings", this);
+        });
 
-	function updateColors() {
-		$('#preview').css({
-			color: $('#color').val(),
-			'background-color': $('#bgColor').val(),
-		});
-	}
+        $("#s3-upload-credentials").on("submit", (e) => {
+            e.preventDefault();
+			debugger;
+            var form = this;
+            bootbox.confirm("Are you sure you wish to store your credentials for accessing S3 in the database?", (confirm) => {
+                if (confirm) {
+                    save("credentials", form);
+                }
+            });
+        });
+    };
 
-	function setupUploader() {
-		$('#content input[data-action="upload"]').each(function () {
-			var uploadBtn = $(this);
-			uploadBtn.on('click', function () {
-				uploader.show({
-					route: config.relative_path + '/api/admin/upload/file',
-					params: {
-						folder: 'quickstart',
-					},
-					accept: 'image/*',
-				}, function (image) {
-					$('#' + uploadBtn.attr('data-target')).val(image);
-				});
-			});
-		});
-	}
+    const save = (type, form) => {
+        var data = {
+            _csrf: $('#csrf_token').val()
+        };
 
-	return ACP;
+        var values = $(form).serializeArray();
+        for (var i = 0, l = values.length; i < l; i++) {
+            data[values[i].name] = values[i].value;
+        }
+
+		debugger;
+
+        $.post('/api/admin/plugins/s3-uploads/' + type, data).done(function (response) {
+            if (response) {
+                ajaxify.refresh();
+                app.alertSuccess(response);
+            }
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            ajaxify.refresh();
+            app.alertError(jqXHR.responseJSON ? jqXHR.responseJSON.error : 'Error saving!');
+        });
+    }
 });

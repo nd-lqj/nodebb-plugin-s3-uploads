@@ -1,6 +1,6 @@
 {
-	"id": "nodebb-plugin-quickstart",
-	"url": "https://github.com/NodeBB/nodebb-plugin-quickstart",
+	"id": "nodebb-plugin-s3-uploads",
+	"url": "https://github.com/nd-lqj/nodebb-plugin-s3-uploads",
 	"library": "./library.js",
 	"hooks": [
 		{
@@ -10,23 +10,27 @@
 			"hook": "static:api.routes", "method": "addRoutes"
 		},
 		{
-			"hook": "filter:admin.header.build", "method": "addAdminNavigation"
+			"hook": "action:plugin.activate", "method": "activate"
+		},
+        {
+			"hook": "action:plugin.deactivate", "method": "deactivate"
+		},
+		{
+			"hook": "filter:uploadImage", "method": "uploadImage", "priority": 6
+		},
+        {
+			"hook": "filter:uploadFile", "method": "uploadFile", "priority": 6
 		}
 	],
 	"staticDirs": {
 		"static": "./static"
 	},
-	"less": [
-		"static/style.less"
-	],
-	"scripts": [
-		"static/lib/main.js"
-	],
+	"less": [],
+	"scripts": [],
 	"acpScripts": [
 		"static/lib/admin.js"
 	],
-	"modules": {
-		"../client/quickstart.js": "./static/lib/quickstart.js"
-	},
-	"templates": "static/templates"
+	"modules": {},
+	"templates": "static/templates",
+    "settingsRoute": "/admin/plugins/s3-uploads"
 }
